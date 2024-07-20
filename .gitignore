@@ -1,0 +1,8 @@
+wandb
+models
+__pycache__
+results
+data/*.csv
+test
+model
+venv

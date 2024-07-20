@@ -1,0 +1,6 @@
+*.csv filter=lfs diff=lfs merge=lfs -text
+data/allseqs_20191230.csv filter=lfs diff=lfs merge=lfs -text
+data/c1r2train.csv filter=lfs diff=lfs merge=lfs -text
+data/holdoutfinal.csv filter=lfs diff=lfs merge=lfs -text
+data/nakaicsv.csv filter=lfs diff=lfs merge=lfs -text
+data/realdata.csv filter=lfs diff=lfs merge=lfs -text
