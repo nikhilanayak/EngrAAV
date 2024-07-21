@@ -14,10 +14,11 @@
   <a href="#abstract">Abstract</a> •
   <a href="#how-to-use">How To Use</a> •
   <a href="#try-online">Try Online</a> •
-  <a href="#training-figures">Training Figures</a> •
   <a href="#paper">Paper</a> •
-  <a href="#credits">Credits</a> •
-  <a href="#related-work">Related Work</a>
+  <a href="#training-figures">Training Figures</a> •
+  <a href="#related-work">Related Work</a> •
+  <a href="#support">Support</a> •
+  <a href="#credits">Credits</a>
 </p>
 
 ![screenshot](./res/demo.gif)
@@ -34,7 +35,7 @@ To clone and run this application, you'll need [Python 3.9](https://www.python.o
 ```bash
 # Clone this repository
 $ git clone https://github.com/nikhilanayak/EngrAAV
-
+ •
 # Go into the repository
 $ cd EngrAAV
 
@@ -61,6 +62,11 @@ $ python src/directed_evolution.py
 ## Try Online
 An online app running the directed_evolution.py script is available on a [Hugging Face space](https://huggingface.co/spaces/nikhilnayak/EngrAAV). The app may require some time to warm up if it hasn't been recently visited. 
 
+## Paper
+
+The research paper for EngrAAV is still being drafted. However,a working copy of it is available [here](res/Nayak_Pai_EngrAAV.pdf) for those interested. 
+
+
 ## Training Figures
 <img src="./res/loss.png"/>
 <p align="center">Training loss (over 25 epochs)</p>
@@ -75,14 +81,6 @@ An online app running the directed_evolution.py script is available on a [Huggin
 <img src="./res/lr.png"/>
 <p align="center">Learning rate warmup & exponential decay</p>
 
-## Paper
-
-The research paper for EngrAAV is still being drafted. However,a working copy of it is available [here](res/Nayak_Pai_EngrAAV.pdf) for those interested. 
-
-## Credits
-
-This work was done in conjungtion with Akash Pai as well as the OHSU lab. Akash helped with the biology aspect (namely experimental validation) while Dr. Hiroyuki Nakai and the Nakai Lab mentored Akash and I, giving their time and support as we worked on this project. 
-
 ## Related Work
 
 [Google AAV](https://github.com/google-research/google-research/tree/master/aav) - A google project that also utilizes ML for AAV optimization
@@ -91,6 +89,11 @@ This work was done in conjungtion with Akash Pai as well as the OHSU lab. Akash 
 ## Support
 
 If you used this project or any of its code, or had any questions, shoot me an email at nikhil.a.nayak@gmail.com.
+
+
+## Credits
+
+This work was done in conjungtion with Akash Pai as well as the OHSU lab. Akash helped with the biology aspect (namely experimental validation) while Dr. Hiroyuki Nakai and the Nakai Lab mentored Akash and I, giving their time and support as we worked on this project. 
 
 
 
