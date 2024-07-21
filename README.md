@@ -14,6 +14,7 @@
   <a href="#abstract">Abstract</a> •
   <a href="#how-to-use">How To Use</a> •
   <a href="#try-online">Try Online</a> •
+  <a href="#training-figures">Training Figures</a> •
   <a href="#paper">Paper</a> •
   <a href="#credits">Credits</a> •
   <a href="#related-work">Related Work</a>
@@ -59,6 +60,20 @@ $ python src/directed_evolution.py
 
 ## Try Online
 An online app running the directed_evolution.py script is available on a [Hugging Face space](https://huggingface.co/spaces/nikhilnayak/EngrAAV). The app may require some time to warm up if it hasn't been recently visited. 
+
+## Training Figures
+<img src="./res/loss.png"/>
+<p align="center">Training loss (over 25 epochs)</p>
+
+---
+
+<img src="./res/val_loss.png"/>
+<p align="center">Validation loss measured each epoch</p>
+
+---
+
+<img src="./res/lr.png"/>
+<p align="center">Learning rate warmup & exponential decay</p>
 
 ## Paper
 
