@@ -1,3 +1,10 @@
+import subprocess
+
+#subprocess.call(["pip", "install", "numpy==1.21.0"])
+#subprocess.call(["pip", "install", "pandas==1.3.5"])
+#subprocess.call(["pip", "install", "matplotlib==3.5.3"])
+
+import numpy as np
 import bisect
 import collections
 import json
@@ -47,25 +54,17 @@ class TQDMPredictCallback(keras.callbacks.Callback):
             self.tqdm_progress.close()
 
 
-
-
-
 physical_devices = tf.config.list_physical_devices('GPU')
 for device in physical_devices:
     tf.config.experimental.set_memory_growth(device, True)
 
 model = keras.models.load_model("model")
-x, _, y = get_data("data/everything.csv", uniq_path="config/uniq.json", vs=True)
-
-
-as_df = pd.read_csv("data/everything.csv").sample(frac=1)
-
-#acc = model.evaluate(x, y)
+#acc = model.evaluate(, y)
 #print("Accuracy:", acc[2])
 
 
 
-with open("config/uniq.json", "r") as fp:
+with open("uniq.json", "r") as fp:
     json_data = json.load(fp)
     uniq_list = json_data["uniq"]
 
@@ -80,10 +79,15 @@ with open("config/uniq.json", "r") as fp:
     lower_vocab = lindices
     upper_vocab = uindices
 
+
+data_loader.uniq = uniq_list
+
 WT = "DEEEIRTTNPVATEQYGSVSTNLQRGNR"
 WT = [data_loader.uniq.index(i) for i in WT]
 WT = WT# + [0] * (40 - len(WT))
 
+def fits_constraints(sequence, num_bases):
+    return True
 
 
 def remove_padding(sequence_list):
@@ -117,8 +121,10 @@ def mutate(sequences, population_size, num_mutations):
 
         yield np.array(sequence + [0] * (40 - len(sequence)))
 
-        for _ in range(subsitution_count):
-            positions = random.sample(range(len(sequence)), random.choice(num_mutations))
+        for _ in range(int(subsitution_count)):
+            #print(sequence)
+            #print(num_mutations)
+            positions = random.sample(range(len(sequence)), random.choice(range(num_mutations)))
             mutated = sequence.copy()
             for p in positions:
                 mutated[p] = random.choice(upper_vocab)
@@ -133,9 +139,9 @@ def mutate(sequences, population_size, num_mutations):
                 pass
         
         sequence = list(sequence)
-        for _ in range(insertion_count):
+        for _ in range(int(insertion_count)):
             mutated = sequence.copy()
-            for p in range(random.choice(num_mutations)):
+            for p in range(random.choice(range(num_mutations))):
                 position = random.randint(0, len(sequence))
                 v = random.choice(lower_vocab)
                 #mutated = mutated[:position] + v + mutated[position:]
@@ -203,7 +209,7 @@ class TopHeap:
 
 
 #@profile
-def get_best(population, pop_size, num, yield_num=128, ):
+def get_best(population, pop_size, num, yield_num=128):
     best = TopHeap(num)
     
     seen = 0
@@ -252,110 +258,71 @@ def search_mut(df, mutation_count, seed_size, pop_size, cutoff_size, yield_num=1
 
 
 
-BATCH_SIZE = 128
 
 
-bests = [None for i in range(20)]
 
-SEED_POP = 1000
-GEN_POP = 25000
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+import tensorflow as tf
+
+try:
+    # Disable all GPUS
+    tf.config.set_visible_devices([], 'GPU')
+    visible_devices = tf.config.get_visible_devices()
+    for device in visible_devices:
+        assert device.device_type != 'GPU'
+except:
+    # Invalid device or cannot modify virtual devices once initialized.
+    pass
+
+import gradio as gr
+import json
+from tensorflow import keras
+
+model = keras.models.load_model("model")
 
 
-first_round = True
+with open("uniq.json", "r") as fp:
+    data = json.load(fp)
+    tokens = data["uniq"]
+    maxlen = data["MAX"]
 
-for sequence in as_df.sequence:
-    if len(sequence) > 40:
-        continue
-    prediction = model.predict(np.array([[data_loader.uniq.index(i) for i in sequence] + [0] * (40 - len(sequence))]))[0][0]
-    best_vs = 0
+def tokenize(sequence):
+    return np.array([tokens.index(i) for i in sequence] + [0] * (maxlen - len(sequence)))
+        
+def run(seed_seq, num_bases, population_size, num_mutations_per_round, num_rounds):
+    num_bases = int(num_bases)
+    population_size = int(population_size)
+    num_mutations_per_round = int(num_mutations_per_round)
+    num_rounds = int(num_rounds)
 
-    pop = batch(mutate([
-        [data_loader.uniq.index(i) for i in sequence] + [0] * (40 - len(sequence))
-    ], GEN_POP, [1, 2, 3]), BATCH_SIZE)
-    new_best, num_tested = get_best(pop, GEN_POP, SEED_POP, BATCH_SIZE)
-    #bests[mutation_count] = new_best
+    num_rounds = int(num_rounds)
 
-    avg_vs = sum(new_best.values) / len(new_best.values)
-    max_vs_index = max(range(len(new_best.values)), key=new_best.values.__getitem__)
-    min_vs_index = min(range(len(new_best.values)), key=new_best.values.__getitem__)
-
-    max_vs_sequence = ("".join(data_loader.uniq[i] for i in new_best.sequences[max_vs_index])).strip()
-    min_vs_sequence = ("".join(data_loader.uniq[i] for i in new_best.sequences[min_vs_index])).strip()
-
-    max_vs_vs = new_best.values[max_vs_index]
-
-    best_vs = max(max_vs_vs, best_vs)
-
-    min_vs_vs = new_best.values[min_vs_index]
+    pop = batch(mutate([WT], population_size, num_mutations_per_round), 128)
     
-    #print(f"Looked at {num_tested} sequences (250000)")
-    #print(f"Best Sequence: {max_vs_sequence}, Viral Selection: {max_vs_vs}")
-    #print(f"Worst Sequence: {min_vs_sequence}, Viral Selection: {min_vs_vs}")
-    #print(f"Average Viral Selection: {avg_vs}")
+    max_vs_sequence = ""
+    best_vs = -1000
 
-    #print(f"Best: {len(new_best.sequences)} (50)")
-    best_sequences = new_best.sequences
+    for rnum in range(int(num_rounds)):
+        new_best, new_tested = get_best(pop, population_size, num_bases, yield_num=128)
 
-    best_str_sequences = ["".join([data_loader.uniq[j] for j in i]).strip() for i in new_best.sequences]
-    best_virals = new_best.values
+        avg_vs = sum(new_best.values) / len(new_best.values)
+        max_vs_index = max(range(len(new_best.values)), key=new_best.values.__getitem__)
+        min_vs_index = min(range(len(new_best.values)), key=new_best.values.__getitem__)
 
-    dfdf = pd.DataFrame({"sequence": best_str_sequences, "pred": best_virals})
-    dfdf = dfdf.sort_values("pred")[::-1]
+        max_vs_sequence = ("".join(data_loader.uniq[i] for i in new_best.sequences[max_vs_index])).strip()
+        min_vs_sequence = ("".join(data_loader.uniq[i] for i in new_best.sequences[min_vs_index])).strip()
 
-    #dfdf.to_csv(f"designed_sequences/{round_num}_{mutation_count}.csv", index=False)
+        max_vs_vs = new_best.values[max_vs_index]
 
-    print(sequence)
-    print(prediction, best_vs)
+        best_vs = max(max_vs_vs, best_vs)
 
+        min_vs_vs = new_best.values[min_vs_index]
 
-
-
-
-
-ROUNDS = 100
-INITIAL_POPULATION = 37 * 1000 * 1000
-KEPT_POPULATION = 100 * 1000 #1000 * 10 # 10 thousand
-
-
-"""
-number of mutations to search = 16
-seed per mutation = 1000
-population per sequence = 250
-population per mutation = 250,000
-
-
-best per mutation = 50
-
-
-
-"""
-
-best_sequences = [WT]
-for r in range(ROUNDS):
-    print("\n")
-    print(f"Mutating from {len(best_sequences)} sequences")
-    population = batch(mutate(best_sequences, INITIAL_POPULATION, [1, 2, 3, 4, 5]), BATCH_SIZE)#mutate_to(best_sequences, INITIAL_POPULATION, yield_num=BATCH_SIZE)
-
-    new_best, num_tested = get_best(population, INITIAL_POPULATION, KEPT_POPULATION, yield_num=BATCH_SIZE)
-
-    if len(new_best.values) == 0:
-        quit()
-    avg_vs = sum(new_best.values) / len(new_best.values)
-    max_vs_index = max(range(len(new_best.values)), key=new_best.values.__getitem__)
-    min_vs_index = min(range(len(new_best.values)), key=new_best.values.__getitem__)
-
-    max_vs_sequence = ("".join(data_loader.uniq[i] for i in new_best.sequences[max_vs_index])).strip()
-    min_vs_sequence = ("".join(data_loader.uniq[i] for i in new_best.sequences[min_vs_index])).strip()
-
-    max_vs_vs = new_best.values[max_vs_index]
-    min_vs_vs = new_best.values[min_vs_index]
+        pop = batch(mutate(new_best.sequences, population_size, num_mutations_per_round), 128)
     
-    print(f"Directed Evolution Round {r}:")
-    print(f"Looked at {num_tested} sequences ({INITIAL_POPULATION})")
-    print(f"Best Sequence: {max_vs_sequence}, Viral Selection: {max_vs_vs}")
-    print(f"Worst Sequence: {min_vs_sequence}, Viral Selection: {min_vs_vs}")
-    print(f"Average Viral Selection: {avg_vs}")
+    return max_vs_sequence
 
-    print(f"Best: {len(new_best.sequences)} ({KEPT_POPULATION})")
-    best_sequences = new_best.sequences
 
+face = gr.Interface(fn=run, inputs=["text", "number", "number", "number", "number"], outputs="text")
+face.launch()

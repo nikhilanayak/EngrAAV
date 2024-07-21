@@ -16,7 +16,6 @@ import wandb
 
 tf.compat.v1.disable_eager_execution()
 
-wandb.init()
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--tune_hyperparams", help="runs hyperparameter tuning for transformer", action="store_true")
@@ -25,9 +24,10 @@ parser.add_argument("--batch_size", type=int, default=256, help="train batch siz
 parser.add_argument("--warmup_steps", type=int, default=128, help="number of warmup steps for cosine decay learning rate regularization")
 parser.add_argument("--train_dataset", type=str, default="data/c1r2train.csv")
 parser.add_argument("--eval_dataset", type=str, default="data/holdoutfinal.csv")
-parser.add_argument("--no_wandb", action="store_true")
 
 args = parser.parse_args()
+
+wandb.init()
 
 def repeat(l, n):
     return [l for i in range(n)]
